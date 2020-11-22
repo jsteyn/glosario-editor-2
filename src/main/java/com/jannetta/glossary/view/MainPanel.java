@@ -1,20 +1,29 @@
 package com.jannetta.glossary.view;
 
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.Color;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -43,10 +52,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
     private static final long serialVersionUID = 1L;
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    private String filename_from = "/home/jannetta/CARPENTRIES/glosario/glossary.yml";
-    // private String filename_from =
-    // "/home/jannetta/CARPENTRIES/VSC-workspace/glosarioeditor/sampleGlossary.yml";
-    private String filename_to = "/home/jannetta/CARPENTRIES/glosario/glossary_bu.yml";
+    private String lastdir = ".";
+    private String filename_from = "glossary.yml";
+    private String filename_to = "glossary_bu.yml";
     private JButtonPanel pnl_slugButtons;
     private ArrayList<JButton> buttons;
 
@@ -73,18 +81,67 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
     private JButton btn_Save = new JButton("Save file");
     private JLabel lbl_Save = new JLabel(filename_to);
     private JButton btn_AddSlug = new JButton("Add Slug");
+    private JScrollPane scrollPane;
 
     private LinkedHashMap<String, LanguageCode> languageCodes;
     private LinkedHashMap<String, Slug> listOfSlugs;
     private JList<String> lst_References;// = new JList<String>(new DefaultListModel<String>());
 
+    private Properties properties = new Properties();
+
     public MainPanel() {
         super();
+        /**
+         * Load defaults from system.properties
+         */
+        properties = StaticUtils.loadProperties();
+        if (!(properties.getProperty("lastdir") == null))
+            lastdir = properties.getProperty("lastdir");
+        else
+            properties.setProperty("lastdir", lastdir);
+        String fn = properties.getProperty("filename_from");
+        if (!(fn == null)) {
+            filename_from = fn;
+        }
 
         /**
          * Load the glossary file
          */
-        listOfSlugs = YAML.parseYAML(new File(filename_from));
+        File f = new File(lastdir + "/" + filename_from);
+        if (!(f.exists())) {
+
+            try {
+                InputStream in = getClass().getResourceAsStream("/sampleGlossaryDefault.yml");
+                byte[] buffer = new byte[in.available()];
+                in.read(buffer);
+                File targetFile = new File(lastdir + "/" + filename_from);
+                OutputStream outStream = new FileOutputStream(targetFile);
+                outStream.write(buffer);
+                outStream.close();
+            } catch (NullPointerException e) {
+                logger.error("file not found.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // try {
+            // OutputStream out = new FileOutputStream(f);
+            // logger.debug("No default glossary file");
+            // System.exit(1);
+            // } catch (FileNotFoundException e) {
+            // // TODO Auto-generated catch block
+            // e.printStackTrace();
+            // }
+
+        }
+
+        listOfSlugs = YAML.parseYAML(new File(lastdir + "/" + filename_from));
+
+        /**
+         * Load the slug buttons
+         */
+        buttons = StaticUtils.loadSlugButtons(this, lastdir + "/" + filename_from);
+
         /**
          * load the languages file
          */
@@ -102,14 +159,16 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         cb_references.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent ie) {
                 if (ie.getStateChange() == ItemEvent.SELECTED) {
-                    if (lst_References == null)
-                        lst_References = new JList<String>(new DefaultListModel<String>());
-                    ((DefaultListModel<String>) lst_References.getModel())
-                            .addElement((String) cb_references.getSelectedItem());
-                    cb_references.insertItemAt((String) cb_references.getSelectedItem(), 0);
-                    Slug slug = listOfSlugs.get(tf_fromSlug.getText());
-                    String addedReferenece = (String) cb_references.getSelectedItem();
-                    slug.getReferences().add(addedReferenece);
+                    if (!((String) cb_references.getSelectedItem()).strip().equals("")) {
+                        if (lst_References == null)
+                            lst_References = new JList<String>(new DefaultListModel<String>());
+                        ((DefaultListModel<String>) lst_References.getModel())
+                                .addElement((String) cb_references.getSelectedItem());
+                        cb_references.insertItemAt((String) cb_references.getSelectedItem(), 0);
+                        Slug slug = listOfSlugs.get(tf_fromSlug.getText());
+                        String addedReferenece = (String) cb_references.getSelectedItem();
+                        slug.getReferences().add(addedReferenece);
+                    }
                     btn_Save.setEnabled(true);
                 }
             }
@@ -138,10 +197,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         cb_language.setSelectedIndex(0);
         updateForm();
 
-        // Panel SlugButtons
-        buttons = StaticUtils.loadSlugButtons(this, filename_from);
+        // Panel slugButtons
         pnl_slugButtons = new JButtonPanel(buttons);
-        JScrollPane scrollPane = new JScrollPane(pnl_slugButtons);
+        scrollPane = new JScrollPane(pnl_slugButtons);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setViewportView(pnl_slugButtons);
@@ -190,14 +248,36 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         return this;
     }
 
+    private ImageIcon createImageIcon(String path, String description) {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        try {
+            Image icon = toolkit.getImage(ClassLoader.getSystemResource("parrot.png"));
+            return new ImageIcon(icon);
+        } catch (NullPointerException e) {
+            logger.error("parrot.png not found.");
+            return null;
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         logger.debug("Event: " + e.getActionCommand());
 
+        if (e.getActionCommand().equals("About")) {
+            ImageIcon icon = createImageIcon("parrot.png", "Glosario Logo");
+            JOptionPane.showMessageDialog(this,
+                    "GlossaryEditor is an editor, written in Java for updating.\n"
+                            + "the Carpentries Glosario project YAML file.\n\n"
+                            + "Glosario is an Open Source project maintainedby the Carpentries Community\n\n "
+                            + "Glosario: https://glosario.carpentries.org/\n"
+                            + "GlosarioEditor: https://github.com/jsteyn/glossario-editor-2\n\n"
+                            + "Version 1.0 (2020-11-23)\n" + "Copyright: Jannetta S Steyn, 2020",
+                    "About GlosarioEditor", JOptionPane.PLAIN_MESSAGE, icon);
+        }
         if (e.getActionCommand().equals("comboBoxChanged")) {
             updateForm();
         } else if (e.getActionCommand().equals("Save file")) {
-            YAML.write(listOfSlugs, new File(filename_to));
+            YAML.write(listOfSlugs, new File(lastdir + "/" + filename_to));
             btn_Save.setEnabled(false);
         } else if (e.getActionCommand().equals("New slug")) {
             StaticUtils.lockDocumentListeners = true;
@@ -215,27 +295,36 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             listOfSlugs.put(tf_fromSlug.getText(), newSlug);
             buttons = StaticUtils.addSlugButton(this, buttons, tf_fromSlug.getText());
             pnl_slugButtons.fireUpdate();
+            pnl_slugButtons.getComponent(pnl_slugButtons.getComponentCount() - 1).requestFocus();
+            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum() + 1);
+            btn_Save.setEnabled(true);
+            btn_AddSlug.setVisible(false);
             updateUI();
             tf_fromSlug.setEditable(false);
         } else if (e.getActionCommand().equals("Open")) {
-            final JFileChooser fc = new JFileChooser();
-            FileFilter pdfFilter = new FileTypeFilter(".yml", "Comma separated value file");
-            fc.addChoosableFileFilter(pdfFilter);
+            lastdir = properties.getProperty("lastdir");
+            final JFileChooser fc = new JFileChooser(lastdir);
+            FileFilter ymlFilter = new FileTypeFilter(".yml", "YAML file");
+            fc.addChoosableFileFilter(ymlFilter);
             // fc.setFileFilter(docF);
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fc.getSelectedFile();
-                filename_from = file.getAbsolutePath();
+                lastdir = file.getParent();
+                filename_from = file.getName();
                 filename_to = filename_from.substring(0, filename_from.length() - 4) + "_bu.yml";
-                logger.debug(filename_from + "\t" + filename_to);
+                logger.debug(lastdir + "/" + filename_from + "\t" + lastdir + "/" + filename_to);
                 // Read slugs
-                listOfSlugs = YAML.parseYAML(new File(filename_from));
+                listOfSlugs = YAML.parseYAML(new File(lastdir + "/" + filename_from));
                 // Generate buttons for slugs
-                buttons = StaticUtils.loadSlugButtons(this, filename_from);
+                buttons = StaticUtils.loadSlugButtons(this, lastdir + "/" + filename_from);
                 // Load buttons into panel
                 pnl_slugButtons.setButtons(buttons);
                 pnl_slugButtons.fireUpdate();
-                lbl_Save.setText(filename_to);
+                lbl_Save.setText(lastdir + "/" + filename_to);
+                properties.setProperty("lastdir", file.getParent());
+                properties.setProperty("filename_from", filename_from);
+                StaticUtils.saveProperties(properties);
 
                 this.updateUI();
             }
@@ -317,27 +406,34 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         }
         if (e.getDocument().getProperty("prop").equals("ta_toDefinition")) {
             logger.debug("ta_toDefinition");
-        }
-        if (!StaticUtils.lockDocumentListeners) {
-            String language = ((String) cb_language.getSelectedItem()).substring(4);
-            String slugname = tf_fromSlug.getText();
-            Slug slug = listOfSlugs.get(slugname);
-            String langcode = languageCodes.get(language).getCode();
-            logger.debug("update: " + language + "\t" + langcode);
-            if (slug != null) {
-                LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
-                if (languageEntry == null) {
-                    logger.debug("update: " + "Langcode empty");
-                    languageEntry = new LanguageEntry();
-
+            if (!(ta_toDefinition.getText().strip().equals(""))) {
+                if (tf_toTerm.getText().strip().equals("")) {
+                    JOptionPane.showMessageDialog(this, "First enter a term before adding a description",
+                            "Missing Term", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    if (!StaticUtils.lockDocumentListeners) {
+                        String language = ((String) cb_language.getSelectedItem()).substring(4);
+                        String slugname = tf_fromSlug.getText();
+                        Slug slug = listOfSlugs.get(slugname);
+                        String langcode = languageCodes.get(language).getCode();
+                        logger.debug("update: " + language + "\t" + langcode);
+                        if (slug != null) {
+                            LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
+                            if (languageEntry == null) {
+                                logger.debug("update: " + "Langcode empty");
+                                languageEntry = new LanguageEntry();
+                            }
+                            languageEntry.setLanguage(langcode);
+                            languageEntry.setTerm(tf_toTerm.getText());
+                            if (!tf_toAcronymn.getText().equals(""))
+                                languageEntry.setAcronym(tf_toAcronymn.getText());
+                            languageEntry.setDefinition(ta_toDefinition.getText());
+                            slug.getLanguageEntries().put(langcode, languageEntry);
+                            btn_Save.setEnabled(true);
+                        }
+                    }
                 }
-                languageEntry.setLanguage(langcode);
-                languageEntry.setTerm(tf_toTerm.getText());
-                if (!tf_toAcronymn.getText().equals(""))
-                    languageEntry.setAcronym(tf_toAcronymn.getText());
-                languageEntry.setDefinition(ta_toDefinition.getText());
-                slug.getLanguageEntries().put(langcode, languageEntry);
-                btn_Save.setEnabled(true);
+
             }
         }
 

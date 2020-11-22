@@ -6,3 +6,5 @@ data/
 launch.json
 target/
 Glossary.code-workspace
+system.properties
+*.yml
