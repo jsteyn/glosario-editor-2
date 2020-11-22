@@ -4,8 +4,8 @@
 	<artifactId>glossary-core</artifactId>
 	<version>0.0.1</version>
 	<properties>
-		<maven.compiler.source>14</maven.compiler.source>
-		<maven.compiler.target>14</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 	</properties>
 	<build>
 		<finalName>GlossaryEditor2</finalName>
