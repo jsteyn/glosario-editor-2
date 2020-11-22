@@ -209,11 +209,11 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         pnl_fromLanguage.add(lbl_fromSlug);
         pnl_fromLanguage.add(tf_fromSlug);
         pnl_fromLanguage.add(btn_AddSlug, "wrap");
+        pnl_fromLanguage.add(lbl_References);
+        pnl_fromLanguage.add(cb_references, "wrap");
         pnl_fromLanguage.add(lbl_fromLanguage, "span, wrap");
         pnl_fromLanguage.add(lbl_fromTerm);
         pnl_fromLanguage.add(tf_fromTerm, "wrap");
-        pnl_fromLanguage.add(lbl_References);
-        pnl_fromLanguage.add(cb_references, "wrap");
         pnl_fromLanguage.add(sp_fromDefinition, "span, grow");
 
         // Panel toLanguage
@@ -276,9 +276,11 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         }
         if (e.getActionCommand().equals("comboBoxChanged")) {
             updateForm();
+
         } else if (e.getActionCommand().equals("Save file")) {
             YAML.write(listOfSlugs, new File(lastdir + "/" + filename_to));
             btn_Save.setEnabled(false);
+
         } else if (e.getActionCommand().equals("New slug")) {
             StaticUtils.lockDocumentListeners = true;
             tf_fromSlug.setText("");
@@ -290,6 +292,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             tf_fromSlug.setEditable(true);
             btn_AddSlug.setVisible(true);
             StaticUtils.lockDocumentListeners = false;
+
         } else if (e.getActionCommand().equals("addslug")) {
             Slug newSlug = new Slug(tf_fromSlug.getText());
             listOfSlugs.put(tf_fromSlug.getText(), newSlug);
@@ -301,6 +304,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             btn_AddSlug.setVisible(false);
             updateUI();
             tf_fromSlug.setEditable(false);
+
         } else if (e.getActionCommand().equals("Open")) {
             lastdir = properties.getProperty("lastdir");
             final JFileChooser fc = new JFileChooser(lastdir);
@@ -324,6 +328,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 lbl_Save.setText(lastdir + "/" + filename_to);
                 properties.setProperty("lastdir", file.getParent());
                 properties.setProperty("filename_from", filename_from);
+                pnl_slugButtons.getComponent(0).requestFocus();
+                tf_fromSlug.setText(((JButton) pnl_slugButtons.getComponent(0)).getText());
+                updateForm();
                 StaticUtils.saveProperties(properties);
 
                 this.updateUI();
@@ -333,15 +340,16 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             logger.debug("Pressed " + e.getActionCommand());
             // Slug button pressed
             Slug slug = listOfSlugs.get(e.getActionCommand().substring(4));
-            String[] references = {};
-            if (Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class) != null)
-                references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class);
+            String[] references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(),
+                    String[].class);
             StaticUtils.lockDocumentListeners = true;
             tf_fromSlug.setText(slug.getSlug());
             // Default language to translate from is en (English)
             if (slug.getLanguageEntries().get("en") != null) {
                 if (slug.getLanguageEntries().get("en").getTerm() != null) {
                     tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
+                    cb_references.removeAllItems();
+                    ;
                     cb_references.setModel(new DefaultComboBoxModel<String>(references));
                     ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
                 }
@@ -362,6 +370,17 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         if (!tf_fromSlug.getText().equals("")) {
             String slugname = tf_fromSlug.getText();
             Slug slug = listOfSlugs.get(slugname);
+            String[] references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(),
+                    String[].class);
+            cb_references.removeAllItems();
+            cb_references.setModel(new DefaultComboBoxModel<String>(references));
+            
+            // SET FROM FIELDS
+            LanguageEntry defaultLanguage = slug.getLanguageEntries().get("en");
+            tf_fromTerm.setText(defaultLanguage.getTerm());
+            ta_fromDefinition.setText(defaultLanguage.getDefinition());
+
+            // SET TO FIELDS
             String langcode = languageCodes.get(language).getCode();
             LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
             StaticUtils.lockDocumentListeners = true;
