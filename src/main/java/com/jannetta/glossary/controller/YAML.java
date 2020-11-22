@@ -12,7 +12,12 @@ import java.util.Set;
 import com.jannetta.glossary.model.LanguageEntry;
 import com.jannetta.glossary.model.Slug;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class YAML {
+
+    private static Logger logger = LoggerFactory.getLogger(YAML.class);
 
     public static LinkedHashMap<String, Slug> parseYAML(File filename) {
         LinkedHashMap<String, Slug> listOfSlugs = new LinkedHashMap<>();
@@ -41,7 +46,8 @@ public class YAML {
                         else
                             EOF = true;
                         while (line.startsWith("    -")) {
-                            String reference = line.strip().split(" ")[1].strip();
+                            logger.debug(line);
+                            String reference = line.strip().substring(2).strip();
                             references.add(reference);
                             if (sc.hasNextLine())
                                 line = sc.nextLine();
