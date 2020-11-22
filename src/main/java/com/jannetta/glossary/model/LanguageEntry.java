@@ -2,14 +2,23 @@ package com.jannetta.glossary.model;
 
 public class LanguageEntry {
 
-    private String language;
+    private String language; // two letter iso code
     private String term;
     private String definition;
+    private String acronym;
 
+    /**
+     * Get two letter code for language
+     * @return
+     */
     public String getLanguage() {
         return language;
     }
 
+    /**
+     * Set two letter code of language
+     * @param language
+     */
     public void setLanguage(String language) {
         this.language = language;
     }
@@ -32,5 +41,13 @@ public class LanguageEntry {
 
     public String serialize() {
         return "";
+    }
+
+    public String getAcronym() {
+        return acronym;
+    }
+
+    public void setAcronym(String acronym) {
+        this.acronym = acronym;
     }
 }

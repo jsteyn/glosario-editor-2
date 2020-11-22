@@ -1,294 +1,347 @@
 package com.jannetta.glossary.view;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Color;
+import java.awt.event.*;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Scanner;
-import java.util.Set;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
 
+import com.jannetta.glossary.controller.FileTypeFilter;
+import com.jannetta.glossary.controller.StaticUtils;
+import com.jannetta.glossary.controller.YAML;
 import com.jannetta.glossary.model.LanguageCode;
 import com.jannetta.glossary.model.LanguageEntry;
 import com.jannetta.glossary.model.Slug;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.miginfocom.swing.MigLayout;
 
-public class MainPanel extends JPanel implements ActionListener {
+public class MainPanel extends JPanel implements ActionListener, DocumentListener {
 
     /**
      *
      */
     private static final long serialVersionUID = 1L;
+    Logger logger = LoggerFactory.getLogger(getClass());
 
-    private JPanel pnl_slugButtons;
+    private String filename_from = "/home/jannetta/CARPENTRIES/glosario/glossary.yml";
+    // private String filename_from =
+    // "/home/jannetta/CARPENTRIES/VSC-workspace/glosarioeditor/sampleGlossary.yml";
+    private String filename_to = "/home/jannetta/CARPENTRIES/glosario/glossary_bu.yml";
+    private JButtonPanel pnl_slugButtons;
     private ArrayList<JButton> buttons;
 
     private JPanel pnl_fromLanguage = new JPanel();
+
     private JLabel lbl_fromLanguage = new JLabel("English Entry:");
     private JLabel lbl_fromSlug = new JLabel("Slug");
-    private JTextField tf_fromSlug = new JTextField(30);
-    private JLabel lbl_fromReferences = new JLabel("References:");
+    private JTextField tf_fromSlug = new JTextField(20);
+    private JLabel lbl_fromTerm = new JLabel("Term");
+    private JTextField tf_fromTerm = new JTextField(20);
+    private JLabel lbl_References = new JLabel("References:");
     private JComboBox<String> cb_references = new JComboBox<>();
-    private JTextArea ta_fromText = new JTextArea(10, 50);
+    private JTextArea ta_fromDefinition = new JTextArea(100, 80);
+
+    private JPanel pnl_toLanguage = new JPanel();
 
     private JLabel lbl_language = new JLabel("Select language");
     private JComboBox<String> cb_language = new JComboBox<>();
-    private JLabel lbl_slug = new JLabel("Slug");
-    private JTextField tf_slug = new JTextField(20);
-    private ArrayList<LanguageCode> languageCodes;
+    private JLabel lbl_toTerm = new JLabel("Term");
+    private JTextField tf_toTerm = new JTextField(20);
+    private JLabel lbl_toAcronymn = new JLabel("Acronymn");
+    private JTextField tf_toAcronymn = new JTextField(20);
+    private JTextArea ta_toDefinition = new JTextArea(100, 80);
+    private JButton btn_Save = new JButton("Save file");
+    private JLabel lbl_Save = new JLabel(filename_to);
+    private JButton btn_AddSlug = new JButton("Add Slug");
+
+    private LinkedHashMap<String, LanguageCode> languageCodes;
     private LinkedHashMap<String, Slug> listOfSlugs;
+    private JList<String> lst_References;// = new JList<String>(new DefaultListModel<String>());
 
     public MainPanel() {
         super();
-        /**
-         * Layout: +---------------------+------------- | Slug buttons | English entry |
-         * +----------------------------- | | Select language combobox | | Slug | |
-         * References | +--------------- | | Term | | Acronymn | | Definition
-         */
 
         /**
          * Load the glossary file
          */
-        listOfSlugs = parseYAML(new File("data/glossary.yml"));
-        write(listOfSlugs, new File("data/new_glossary.yaml"));
+        listOfSlugs = YAML.parseYAML(new File(filename_from));
+        /**
+         * load the languages file
+         */
+        languageCodes = StaticUtils.loadLanguages();
+        languageCodes.forEach((lang, language) -> cb_language.addItem(language.getCode() + ": " + language.getName()));
 
-        MigLayout migLayout = new MigLayout("fillx", "[]rel[]rel[]", "[]10[]10[]");
+        MigLayout migLayout = new MigLayout("", "[shrink 0]5[]5[grow]", "[][]");
         setLayout(migLayout);
-        languageCodes = loadLanguages();
-        languageCodes.forEach((language) -> cb_language.addItem(language.getName()));
+        pnl_fromLanguage.setLayout(new MigLayout("", "[][grow]"));
+        pnl_toLanguage.setLayout(new MigLayout("", "[][grow]"));
+        cb_language.addActionListener(this);
+        cb_language.setPrototypeDisplayValue("ln: language");
+        cb_references.setPrototypeDisplayValue("aaaaaaaaaaaaaaa");
+        cb_references.setEditable(true);
+        cb_references.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent ie) {
+                if (ie.getStateChange() == ItemEvent.SELECTED) {
+                    if (lst_References == null)
+                        lst_References = new JList<String>(new DefaultListModel<String>());
+                    ((DefaultListModel<String>) lst_References.getModel())
+                            .addElement((String) cb_references.getSelectedItem());
+                    cb_references.insertItemAt((String) cb_references.getSelectedItem(), 0);
+                    Slug slug = listOfSlugs.get(tf_fromSlug.getText());
+                    String addedReferenece = (String) cb_references.getSelectedItem();
+                    slug.getReferences().add(addedReferenece);
+                    btn_Save.setEnabled(true);
+                }
+            }
+        });
+        tf_fromSlug.setEditable(false);
+        tf_fromTerm.setEditable(false);
+        ta_fromDefinition.setEditable(false);
+        ta_fromDefinition.setLineWrap(false);
+        JScrollPane sp_fromDefinition = new JScrollPane(ta_fromDefinition);
+
+        tf_toTerm.getDocument().addDocumentListener(this);
+        tf_toTerm.getDocument().putProperty("prop", "tf_toTerm");
+        tf_toAcronymn.getDocument().addDocumentListener(this);
+        tf_toAcronymn.getDocument().putProperty("prop", "tf_toAcronymn");
+        ta_toDefinition.getDocument().addDocumentListener(this);
+        ta_toDefinition.getDocument().putProperty("prop", "ta_toDefinition");
+        ta_toDefinition.setLineWrap(false);
+        JScrollPane sp_toDefinition = new JScrollPane(ta_toDefinition);
+
+        btn_Save.addActionListener(this);
+        btn_Save.setEnabled(false);
+        btn_AddSlug.addActionListener(this);
+        btn_AddSlug.setVisible(false);
+        btn_AddSlug.setActionCommand("addslug");
+
+        cb_language.setSelectedIndex(0);
+        updateForm();
 
         // Panel SlugButtons
-        buttons = loadSlugButtons(this);
-        pnl_slugButtons = addSlugButtons(buttons);
+        buttons = StaticUtils.loadSlugButtons(this, filename_from);
+        pnl_slugButtons = new JButtonPanel(buttons);
         JScrollPane scrollPane = new JScrollPane(pnl_slugButtons);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setViewportView(pnl_slugButtons);
 
         // Panel fromLanguage
-        pnl_fromLanguage.setLayout(new MigLayout("fillx", "[]rel[]", "[]10[]"));
-        pnl_fromLanguage.add(lbl_fromLanguage, "wrap");
+        pnl_fromLanguage.setBorder(BorderFactory.createLineBorder(Color.black));
         pnl_fromLanguage.add(lbl_fromSlug);
-        pnl_fromLanguage.add(tf_fromSlug, "wrap");
-        pnl_fromLanguage.add(lbl_fromReferences);
+        pnl_fromLanguage.add(tf_fromSlug);
+        pnl_fromLanguage.add(btn_AddSlug, "wrap");
+        pnl_fromLanguage.add(lbl_fromLanguage, "span, wrap");
+        pnl_fromLanguage.add(lbl_fromTerm);
+        pnl_fromLanguage.add(tf_fromTerm, "wrap");
+        pnl_fromLanguage.add(lbl_References);
         pnl_fromLanguage.add(cb_references, "wrap");
-        ta_fromText.setLineWrap(false);
-        ta_fromText.setRows(10);
-        JScrollPane sp_textArea = new JScrollPane(ta_fromText);
-        pnl_fromLanguage.add(sp_textArea, "span 2, wrap");
-        pnl_fromLanguage.add(new JSeparator(), "span, wrap");
-        pnl_fromLanguage.add(lbl_language);
-        pnl_fromLanguage.add(cb_language, "wrap");
+        pnl_fromLanguage.add(sp_fromDefinition, "span, grow");
 
-        add(scrollPane, "span 1 6");
-        add(pnl_fromLanguage, "wrap");
+        // Panel toLanguage
+        pnl_toLanguage.setBorder(BorderFactory.createLineBorder(Color.black));
+        pnl_toLanguage.add(lbl_language);
+        pnl_toLanguage.add(cb_language, "wrap");
+        pnl_toLanguage.add(lbl_toTerm);
+        pnl_toLanguage.add(tf_toTerm, "wrap");
+        pnl_toLanguage.add(lbl_toAcronymn);
+        pnl_toLanguage.add(tf_toAcronymn, "wrap");
+        pnl_toLanguage.add(sp_toDefinition, "span, grow");
+        pnl_toLanguage.add(btn_Save);
+        pnl_toLanguage.add(lbl_Save, "wrap");
 
-    }
+        // Holdall for from- and to panels
+        JPanel holdAll = new JPanel();
+        holdAll.setLayout(new MigLayout());
+        holdAll.add(pnl_fromLanguage, "grow, wrap");
+        holdAll.add(pnl_toLanguage, "grow, wrap");
 
-    private ArrayList<JButton> loadSlugButtons(ActionListener actionListener) {
-        ArrayList<JButton> buttons = new ArrayList<>();
-        try {
-            Scanner sc = new Scanner(new File("data/glossary.yml"));
-            while (sc.hasNextLine()) {
-                String line = sc.nextLine();
-                if (line.startsWith("-")) {
-                    String[] tokens = line.split(":");
-                    JButton button = new JButton(tokens[1].strip());
-                    buttons.add(button);
-                    button.addActionListener(actionListener);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return buttons;
-    }
-
-    private JPanel addSlugButtons(ArrayList<JButton> buttons) {
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new MigLayout("fillx", "[fill]"));
-        buttons.forEach((button) -> {
-            buttonPanel.add(button, "wrap");
-        });
-        return buttonPanel;
-    }
-
-    private ArrayList<LanguageCode> loadLanguages() {
-        ArrayList<LanguageCode> languageCodes = new ArrayList<>();
-        try {
-            Scanner sc = new Scanner(new File("data/language-codes.csv"));
-            while (sc.hasNextLine()) {
-                String[] tokens = sc.nextLine().split(",");
-                LanguageCode languageCode = new LanguageCode(tokens[0], tokens[1]);
-                languageCodes.add(languageCode);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return languageCodes;
-    }
-
-    private void write(LinkedHashMap<String, Slug> listOfSlugs, File filename) {
-        try {
-            PrintWriter pw = new PrintWriter(filename);
-            Set<String> set = listOfSlugs.keySet();
-            Iterator<String> s = set.iterator();
-            while (s.hasNext()) {
-                Slug slug = listOfSlugs.get(s.next());
-                pw.println("- slug: " + slug.getSlug());
-                ArrayList<String> references = slug.getReferences();
-                if (references.size() > 0) {
-                    pw.println("  ref:");
-                    for (int r = 0; r < references.size(); r++) {
-                        pw.println("    - " + references.get(r));
-                    }
-                }
-                LinkedHashMap<String, LanguageEntry> languages = slug.getLanguageEntries();
-                if (languages.size() > 0) {
-                    Set<String> set_languages = languages.keySet();
-                    Iterator<String> i = set_languages.iterator();
-                    while (i.hasNext()) {
-                        LanguageEntry languageEntry = languages.get(i.next());
-                        pw.println("  " + languageEntry.getLanguage() + ": ");
-                        pw.println("    term: \"" + languageEntry.getTerm() + "\"");
-                        pw.println("    def: >");
-                        pw.print(languageEntry.getDefinition());
-                    }
-                }
-                pw.println();
-            }
-            pw.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        add(scrollPane, "shrink 0");
+        add(holdAll, "grow, span, wrap");
 
     }
 
-    private LinkedHashMap<String, Slug> parseYAML(File filename) {
-        LinkedHashMap<String, Slug> listOfSlugs = new LinkedHashMap<>();
-        boolean EOF = false;
-        try {
-            Scanner sc = new Scanner(filename);
-            Slug slug = null;
-            String line = "";
-            if (sc.hasNextLine())
-                do {
-                    if (sc.hasNextLine())
-                        line = sc.nextLine();
-                    else
-                        EOF = true;
-                    // If slug found
-                    if (line.startsWith("- slug:")) {
-                        String slugname = line.split(":")[1].strip();
-                        slug = new Slug(slugname);
-                        System.out.println("- slug:" + slug.getSlug());
-                        listOfSlugs.put(slugname, slug);
-                    } else System.out.println("X1: " + line);
-                    if (line.startsWith("  ref:")) {
-                        // If references found
-                        System.out.println("  ref:");
-                        ArrayList<String> references = slug.getReferences();
-                        if (sc.hasNextLine())
-                            line = sc.nextLine();
-                        else
-                            EOF = true;
-                        while (line.startsWith("    -")) {
-                            String reference = line.strip().split(" ")[1].strip();
-                            references.add(reference);
-                            System.out.println("    - " + reference);
-                            if (sc.hasNextLine())
-                                line = sc.nextLine();
-                            else
-                                EOF = true;
-                        }
-                    } else System.out.println("X2: " + line);
-                    // Language line
-                    if (line.matches("^  [a-z][a-z]:")) {
-                        LinkedHashMap<String, LanguageEntry> languageEntries = slug.getLanguageEntries();
-                        LanguageEntry languageEntry = new LanguageEntry();
-                        String language = line.replace(':', ' ').strip();
-                        languageEntry.setLanguage(language);
-                        languageEntries.put(language, languageEntry);
-                        System.out.println("  " + languageEntries.get(language).getLanguage() + ": ");
-                        // if (sc.hasNextLine())
-                        //     line = sc.nextLine();
-                        // else
-                        //     EOF = true;
-                        // Get term
-                        if (line.startsWith("    term:")) {
-                            String term = line.split(":")[1];
-                            term = term.strip();
-                            term = stripQuotes(term);
-                            languageEntry.setTerm(term);
-                            System.out.println("    term: " + languageEntry.getTerm());
-                            if (sc.hasNextLine())
-                                line = sc.nextLine();
-                            else
-                                EOF = true;
-
-                        } else System.out.println("X3: " + line);
-                        // Get def line
-                        if (line.startsWith("    def")) {
-                            // Read the def text
-                            System.out.println(line);
-                            StringBuilder definition = new StringBuilder();
-                            if (sc.hasNextLine())
-                                line = sc.nextLine();
-                            else
-                                EOF = true;
-                            while (line.startsWith("      ")) {
-                                definition.append(line + "\n");
-                                if (sc.hasNextLine())
-                                    line = sc.nextLine();
-                                else
-                                    EOF = true;
-                            }
-                            languageEntry.setDefinition(definition.toString());
-                            System.out.println(languageEntry.getDefinition());
-
-                        } else System.out.println("X4: " + line);
-
-                    }  else System.out.println("X5: " + line);
-                } while (!EOF);
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return listOfSlugs;
-    }
-
-    private String stripQuotes(String term) {
-        if (term.startsWith("\""))
-            term = term.substring(1);
-        if (term.endsWith("\""))
-            term = term.substring(0, term.length() - 1);
-        return term;
+    /**
+     * Return the ActionListener of this panel
+     * 
+     * @return this object
+     */
+    public ActionListener getActionListener() {
+        return this;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        Slug slug = listOfSlugs.get(e.getActionCommand());
-        String[] references = {};
-        if (Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class) != null)
-            references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class);
-        tf_fromSlug.setText(slug.getSlug());
-        cb_references.setModel(new DefaultComboBoxModel<String>(references));
-        ta_fromText.setText(slug.getLanguageEntries().get("en").getDefinition());
-        System.out.println(slug.getLanguageEntries().get("en").getDefinition());
+        logger.debug("Event: " + e.getActionCommand());
 
+        if (e.getActionCommand().equals("comboBoxChanged")) {
+            updateForm();
+        } else if (e.getActionCommand().equals("Save file")) {
+            YAML.write(listOfSlugs, new File(filename_to));
+            btn_Save.setEnabled(false);
+        } else if (e.getActionCommand().equals("New slug")) {
+            StaticUtils.lockDocumentListeners = true;
+            tf_fromSlug.setText("");
+            tf_fromTerm.setText("");
+            ta_fromDefinition.setText("");
+            tf_toTerm.setText("");
+            tf_toAcronymn.setText("");
+            ta_toDefinition.setText("");
+            tf_fromSlug.setEditable(true);
+            btn_AddSlug.setVisible(true);
+            StaticUtils.lockDocumentListeners = false;
+        } else if (e.getActionCommand().equals("addslug")) {
+            Slug newSlug = new Slug(tf_fromSlug.getText());
+            listOfSlugs.put(tf_fromSlug.getText(), newSlug);
+            buttons = StaticUtils.addSlugButton(this, buttons, tf_fromSlug.getText());
+            pnl_slugButtons.fireUpdate();
+            updateUI();
+            tf_fromSlug.setEditable(false);
+        } else if (e.getActionCommand().equals("Open")) {
+            final JFileChooser fc = new JFileChooser();
+            FileFilter pdfFilter = new FileTypeFilter(".yml", "Comma separated value file");
+            fc.addChoosableFileFilter(pdfFilter);
+            // fc.setFileFilter(docF);
+            int returnVal = fc.showOpenDialog(this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fc.getSelectedFile();
+                filename_from = file.getAbsolutePath();
+                filename_to = filename_from.substring(0, filename_from.length() - 4) + "_bu.yml";
+                logger.debug(filename_from + "\t" + filename_to);
+                // Read slugs
+                listOfSlugs = YAML.parseYAML(new File(filename_from));
+                // Generate buttons for slugs
+                buttons = StaticUtils.loadSlugButtons(this, filename_from);
+                // Load buttons into panel
+                pnl_slugButtons.setButtons(buttons);
+                pnl_slugButtons.fireUpdate();
+                lbl_Save.setText(filename_to);
+
+                this.updateUI();
+            }
+
+        } else if (e.getActionCommand().startsWith("btn_")) {
+            logger.debug("Pressed " + e.getActionCommand());
+            // Slug button pressed
+            Slug slug = listOfSlugs.get(e.getActionCommand().substring(4));
+            String[] references = {};
+            if (Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class) != null)
+                references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(), String[].class);
+            StaticUtils.lockDocumentListeners = true;
+            tf_fromSlug.setText(slug.getSlug());
+            // Default language to translate from is en (English)
+            if (slug.getLanguageEntries().get("en") != null) {
+                if (slug.getLanguageEntries().get("en").getTerm() != null) {
+                    tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
+                    cb_references.setModel(new DefaultComboBoxModel<String>(references));
+                    ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
+                }
+            } else {
+                tf_fromTerm.setText("");
+                ta_fromDefinition.setText("");
+            }
+            StaticUtils.lockDocumentListeners = false;
+            updateForm();
+        }
+    }
+
+    private void updateForm() {
+        String language = ((String) cb_language.getSelectedItem()).substring(4);
+        if (!tf_fromSlug.getText().equals("")) {
+            String slugname = tf_fromSlug.getText();
+            Slug slug = listOfSlugs.get(slugname);
+            String langcode = languageCodes.get(language).getCode();
+            LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
+            StaticUtils.lockDocumentListeners = true;
+            if (languageEntry != null) {
+                logger.debug("Get definition in " + language);
+                tf_toTerm.setText(languageEntry.getTerm());
+                tf_toAcronymn.setText(languageEntry.getAcronym());
+                ta_toDefinition.setText(languageEntry.getDefinition());
+            } else {
+                tf_toTerm.setText("");
+                tf_toAcronymn.setText("");
+                ta_toDefinition.setText("");
+            }
+            StaticUtils.lockDocumentListeners = false;
+        }
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        update(e);
+
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        update(e);
+
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+
+    }
+
+    public void update(DocumentEvent e) {
+
+        if (e.getDocument().getProperty("prop").equals("tf_toTerm")) {
+            logger.debug("tf_toTerm");
+        }
+        if (e.getDocument().getProperty("prop").equals("tf_toAcronymn")) {
+            logger.debug("tf_toAcronymn");
+        }
+        if (e.getDocument().getProperty("prop").equals("ta_toDefinition")) {
+            logger.debug("ta_toDefinition");
+        }
+        if (!StaticUtils.lockDocumentListeners) {
+            String language = ((String) cb_language.getSelectedItem()).substring(4);
+            String slugname = tf_fromSlug.getText();
+            Slug slug = listOfSlugs.get(slugname);
+            String langcode = languageCodes.get(language).getCode();
+            logger.debug("update: " + language + "\t" + langcode);
+            if (slug != null) {
+                LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
+                if (languageEntry == null) {
+                    logger.debug("update: " + "Langcode empty");
+                    languageEntry = new LanguageEntry();
+
+                }
+                languageEntry.setLanguage(langcode);
+                languageEntry.setTerm(tf_toTerm.getText());
+                if (!tf_toAcronymn.getText().equals(""))
+                    languageEntry.setAcronym(tf_toAcronymn.getText());
+                languageEntry.setDefinition(ta_toDefinition.getText());
+                slug.getLanguageEntries().put(langcode, languageEntry);
+                btn_Save.setEnabled(true);
+            }
+        }
+
+    }
+
+    public boolean allSaved() {
+        return !btn_Save.isEnabled();
     }
 
 }
