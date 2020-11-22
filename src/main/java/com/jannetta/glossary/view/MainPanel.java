@@ -129,7 +129,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             // logger.debug("No default glossary file");
             // System.exit(1);
             // } catch (FileNotFoundException e) {
-            // // TODO Auto-generated catch block
             // e.printStackTrace();
             // }
 
@@ -145,7 +144,8 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         /**
          * load the languages file
          */
-        languageCodes = StaticUtils.loadLanguages();
+        InputStream languagefile = getClass().getResourceAsStream("/language-codes.csv");
+        languageCodes = StaticUtils.loadLanguages(languagefile);
         languageCodes.forEach((lang, language) -> cb_language.addItem(language.getCode() + ": " + language.getName()));
 
         MigLayout migLayout = new MigLayout("", "[shrink 0]5[]5[grow]", "[][]");
@@ -268,7 +268,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             JOptionPane.showMessageDialog(this,
                     "GlossaryEditor is an editor, written in Java for updating.\n"
                             + "the Carpentries Glosario project YAML file.\n\n"
-                            + "Glosario is an Open Source project maintainedby the Carpentries Community\n\n "
+                            + "Glosario is an Open Source project maintained by the Carpentries Community\n\n "
                             + "Glosario: https://glosario.carpentries.org/\n"
                             + "GlosarioEditor: https://github.com/jsteyn/glossario-editor-2\n\n"
                             + "Version 1.0 (2020-11-23)\n" + "Copyright: Jannetta S Steyn, 2020",
