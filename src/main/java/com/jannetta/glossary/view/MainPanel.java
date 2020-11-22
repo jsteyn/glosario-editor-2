@@ -265,6 +265,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         }
     }
 
+    /**
+     * Update the form displayed on the screen
+     */
     private void updateForm() {
         String language = ((String) cb_language.getSelectedItem()).substring(4);
         if (!tf_fromSlug.getText().equals("")) {
@@ -340,6 +343,13 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     }
 
+    /**
+     * Returns true if the save button is not enabled and false if it is enabled. An
+     * enabled save button implies that changes have been made that have not been
+     * saved.
+     * 
+     * @return
+     */
     public boolean allSaved() {
         return !btn_Save.isEnabled();
     }
