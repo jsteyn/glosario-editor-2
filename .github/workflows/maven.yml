@@ -25,7 +25,7 @@ jobs:
           java-version: 11
 
       - name: Step 3 - Build project with Maven
-        run: |
+        run: 
           mvn -B package --file pom.xml
           mkdir staging && cp target/*.jar staging
 
