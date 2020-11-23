@@ -34,7 +34,7 @@ jobs:
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashfiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}.m2
+          restore-keys: ${{ runner.os }}-m2
 
       - name: Step 5 - Create an artifact
         uses: actions/upload-artifact@v2
