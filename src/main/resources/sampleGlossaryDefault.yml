@@ -1,0 +1,56 @@
+- slug: WOA_IM_AN_EXAMPLE
+  ref:
+    - WOOA_SO_AM_I
+  en:
+    term: "This is an example"
+    acronym: EG
+    def: >
+      Something that represents something else. Or something.
+
+
+- slug: WOOA_SO_AM_I
+  ref:
+    - Funny Reference
+    - Another Funny Reference
+    - An Unfunny Reference
+  en:
+    term: "I exist"
+    acronym: E
+    def: >
+      Excellent show my good yeoman
+  on:
+    term: "Does this language even exist?"
+    def: >
+  jp:
+    term: "Insert rude Japanese words here"
+    acronym: NANI
+    def: >
+      Omae Wa MOU SHINDEIRU
+
+
+- slug: YOU_TOO?_WOW!!!
+  yo:
+    term: "Waddup"
+    acronym: HI
+    def: >
+
+
+- slug: HOLY_GUACAMOLE_WERE_ALL_EXAMPLES
+  ref:
+    - ZWOOP zibbidybop
+  me:
+    term: "Myself"
+    acronym: I
+    def: >
+      The one and only
+
+
+- slug: Frank
+  en:
+    term: "Frank"
+    def: >
+      This is Frank
+  fr:
+    term: "Frank"
+    def: >
+      The fr stands for Frank

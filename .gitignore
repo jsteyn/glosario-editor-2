@@ -7,4 +7,4 @@ launch.json
 target/
 Glossary.code-workspace
 system.properties
-*.yml
+glosario.yml
