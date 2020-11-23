@@ -1,10 +1,10 @@
 
 import com.jannetta.glossary.view.MainFrame;
 
-public class Glossary {
+public class GlosarioEditor2 {
     static MainFrame mainframe;
 
-    Glossary() {
+    GlosarioEditor2() {
     }
 
     public static void main(String[] args) {

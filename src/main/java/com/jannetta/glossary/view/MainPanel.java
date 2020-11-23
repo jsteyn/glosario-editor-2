@@ -377,6 +377,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             
             // SET FROM FIELDS
             LanguageEntry defaultLanguage = slug.getLanguageEntries().get("en");
+            logger.debug(defaultLanguage.getLanguage());
             tf_fromTerm.setText(defaultLanguage.getTerm());
             ta_fromDefinition.setText(defaultLanguage.getDefinition());
 
