@@ -39,4 +39,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: github-actions-artifact
-        path: stating
+        path: staging
