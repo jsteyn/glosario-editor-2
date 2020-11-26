@@ -37,6 +37,6 @@ jobs:
         run: cd staging && zip GlosarioEditor2.zip GlosarioEditor2.jar run.sh
 
       - name: Step 7 - Move zip to archive
-        run: mkdir archive && mv staging/GlosarioEditor2.zip archive/.
+        run: mv staging/GlosarioEditor2.zip releases/new/.
 
 
