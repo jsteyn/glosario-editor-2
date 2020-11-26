@@ -37,4 +37,4 @@ jobs:
         run: cd staging && zip GlosarioEditor2.zip *.jar run.sh && cd ..
 
       - name: Step 7 - Move zip to releases
-        run: mv staging/GlosarioEditor2.zip releases/new/.
+        run: pwd && mv staging/GlosarioEditor2.zip releases/new/.
