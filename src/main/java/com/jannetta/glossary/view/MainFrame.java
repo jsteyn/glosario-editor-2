@@ -62,10 +62,10 @@ public class MainFrame extends JFrame implements ActionListener {
 					int result2 = JOptionPane.showConfirmDialog(pn_main, "You have made changes, would you like to save before quitting?",
 							"Exit GlosarioEditor?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 					if (result2 == JOptionPane.YES_OPTION) {
-						logger.trace("Save lessons file");
+						logger.trace("Save file");
 
 					} else if (result2 == JOptionPane.NO_OPTION) {
-						logger.trace("Quit without saving lessons");
+						logger.trace("Quit without saving");
 					} else {
 						logger.trace("Cancel quitting");
 					}
@@ -95,6 +95,6 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+		pn_main.save();
 	}
 }

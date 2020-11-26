@@ -13,16 +13,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -67,6 +66,8 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
     private JTextField tf_fromTerm = new JTextField(20);
     private JLabel lbl_References = new JLabel("References:");
     private JComboBox<String> cb_references = new JComboBox<>();
+    private JTextField tf_newReference = new JTextField(15);
+    private JButton btn_AddReference = new JButton("Add Reference");
     private JTextArea ta_fromDefinition = new JTextArea(100, 80);
 
     private JPanel pnl_toLanguage = new JPanel();
@@ -85,7 +86,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     private LinkedHashMap<String, LanguageCode> languageCodes;
     private LinkedHashMap<String, Slug> listOfSlugs;
-    private JList<String> lst_References;// = new JList<String>(new DefaultListModel<String>());
 
     private Properties properties = new Properties();
 
@@ -123,15 +123,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            // try {
-            // OutputStream out = new FileOutputStream(f);
-            // logger.debug("No default glossary file");
-            // System.exit(1);
-            // } catch (FileNotFoundException e) {
-            // e.printStackTrace();
-            // }
-
         }
 
         listOfSlugs = YAML.parseYAML(new File(lastdir + "/" + filename_from));
@@ -150,29 +141,12 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
         MigLayout migLayout = new MigLayout("", "[shrink 0]5[]5[grow]", "[][]");
         setLayout(migLayout);
-        pnl_fromLanguage.setLayout(new MigLayout("", "[][grow]"));
+        pnl_fromLanguage.setLayout(new MigLayout("", "[][][grow]"));
         pnl_toLanguage.setLayout(new MigLayout("", "[][grow]"));
         cb_language.addActionListener(this);
         cb_language.setPrototypeDisplayValue("ln: language");
         cb_references.setPrototypeDisplayValue("aaaaaaaaaaaaaaa");
-        cb_references.setEditable(true);
-        cb_references.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent ie) {
-                if (ie.getStateChange() == ItemEvent.SELECTED) {
-                    if (!((String) cb_references.getSelectedItem()).strip().equals("")) {
-                        if (lst_References == null)
-                            lst_References = new JList<String>(new DefaultListModel<String>());
-                        ((DefaultListModel<String>) lst_References.getModel())
-                                .addElement((String) cb_references.getSelectedItem());
-                        cb_references.insertItemAt((String) cb_references.getSelectedItem(), 0);
-                        Slug slug = listOfSlugs.get(tf_fromSlug.getText());
-                        String addedReferenece = (String) cb_references.getSelectedItem();
-                        slug.getReferences().add(addedReferenece);
-                    }
-                    btn_Save.setEnabled(true);
-                }
-            }
-        });
+        cb_references.setEditable(false);
         tf_fromSlug.setEditable(false);
         tf_fromTerm.setEditable(false);
         ta_fromDefinition.setEditable(false);
@@ -188,11 +162,14 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         ta_toDefinition.setLineWrap(false);
         JScrollPane sp_toDefinition = new JScrollPane(ta_toDefinition);
 
+        tf_newReference.setEditable(false);
+        btn_AddReference.setEnabled(false);
         btn_Save.addActionListener(this);
         btn_Save.setEnabled(false);
         btn_AddSlug.addActionListener(this);
         btn_AddSlug.setVisible(false);
         btn_AddSlug.setActionCommand("addslug");
+        btn_AddReference.addActionListener(this);
 
         cb_language.setSelectedIndex(0);
         updateForm();
@@ -209,6 +186,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         pnl_fromLanguage.add(lbl_fromSlug);
         pnl_fromLanguage.add(tf_fromSlug);
         pnl_fromLanguage.add(btn_AddSlug, "wrap");
+        pnl_fromLanguage.add(new JLabel("New Reference"));
+        pnl_fromLanguage.add(tf_newReference);
+        pnl_fromLanguage.add(btn_AddReference, "wrap");
         pnl_fromLanguage.add(lbl_References);
         pnl_fromLanguage.add(cb_references, "wrap");
         pnl_fromLanguage.add(lbl_fromLanguage, "span, wrap");
@@ -275,6 +255,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     "About GlosarioEditor", JOptionPane.PLAIN_MESSAGE, icon);
         }
         if (e.getActionCommand().equals("comboBoxChanged")) {
+            logger.debug("Source: " + e.getSource().toString());
             updateForm();
 
         } else if (e.getActionCommand().equals("Save file")) {
@@ -336,27 +317,40 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 this.updateUI();
             }
 
+        } else if (e.getActionCommand().equals("Add Reference")) {
+            logger.debug("New reference");
+            StaticUtils.lockDocumentListeners = true;
+            String newReference = tf_newReference.getText();
+            cb_references.addItem(newReference);
+            tf_newReference.setText("");
+            cb_references.showPopup();
+            Slug slug = listOfSlugs.get(tf_fromSlug.getText());
+            slug.getReferences().add(newReference);
+            btn_Save.setEnabled(true);
+            StaticUtils.lockDocumentListeners = false;
+
         } else if (e.getActionCommand().startsWith("btn_")) {
             logger.debug("Pressed " + e.getActionCommand());
+            tf_newReference.setEditable(true);
+            btn_AddReference.setEnabled(true);
             // Slug button pressed
             Slug slug = listOfSlugs.get(e.getActionCommand().substring(4));
             String[] references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(),
                     String[].class);
             StaticUtils.lockDocumentListeners = true;
             tf_fromSlug.setText(slug.getSlug());
-            // Default language to translate from is en (English)
-            if (slug.getLanguageEntries().get("en") != null) {
-                if (slug.getLanguageEntries().get("en").getTerm() != null) {
-                    tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
-                    cb_references.removeAllItems();
-                    ;
-                    cb_references.setModel(new DefaultComboBoxModel<String>(references));
-                    ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
-                }
-            } else {
-                tf_fromTerm.setText("");
-                ta_fromDefinition.setText("");
-            }
+            cb_references.removeAllItems();
+            cb_references.setModel(new DefaultComboBoxModel<String>(references));
+    // // Default language to translate from is en (English)
+    //         if (slug.getLanguageEntries().get("en") != null) {
+    //             if (slug.getLanguageEntries().get("en").getTerm() != null) {
+    //                 tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
+    //                 ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
+    //             }
+    //         } else {
+    //             tf_fromTerm.setText("");
+    //             ta_fromDefinition.setText("");
+    //         }
             StaticUtils.lockDocumentListeners = false;
             updateForm();
         }
@@ -374,28 +368,48 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     String[].class);
             cb_references.removeAllItems();
             cb_references.setModel(new DefaultComboBoxModel<String>(references));
-            
-            // SET FROM FIELDS
-            LanguageEntry defaultLanguage = slug.getLanguageEntries().get("en");
-            logger.debug(defaultLanguage.getLanguage());
-            tf_fromTerm.setText(defaultLanguage.getTerm());
-            ta_fromDefinition.setText(defaultLanguage.getDefinition());
 
-            // SET TO FIELDS
-            String langcode = languageCodes.get(language).getCode();
-            LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
-            StaticUtils.lockDocumentListeners = true;
-            if (languageEntry != null) {
-                logger.debug("Get definition in " + language);
-                tf_toTerm.setText(languageEntry.getTerm());
-                tf_toAcronymn.setText(languageEntry.getAcronym());
-                ta_toDefinition.setText(languageEntry.getDefinition());
-            } else {
+            // SET FROM FIELDS
+
+            LanguageEntry defaultLanguage = null;
+            if (!slug.getLanguageEntries().isEmpty()) {
+                if (slug.getLanguageEntries().get("en") != null) {
+                    defaultLanguage = slug.getLanguageEntries().get("en");
+                } else {
+                    Set<String> keys = slug.getLanguageEntries().keySet();
+                    String key = (String) keys.toArray()[0];
+                    defaultLanguage = slug.getLanguageEntries().get(key);
+                }
+
+                logger.debug("Default language: " + defaultLanguage.getLanguage());
+            
+                logger.debug(defaultLanguage.getLanguage());
+                tf_fromTerm.setText(defaultLanguage.getTerm());
+                ta_fromDefinition.setText(defaultLanguage.getDefinition());
+
+                // SET TO FIELDS
+                String langcode = languageCodes.get(
+                    
+                ).getCode();
+                LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
+                StaticUtils.lockDocumentListeners = true;
+                if (languageEntry != null) {
+                    logger.debug("Get definition in " + language);
+                    tf_toTerm.setText(languageEntry.getTerm());
+                    tf_toAcronymn.setText(languageEntry.getAcronym());
+                    ta_toDefinition.setText(languageEntry.getDefinition());
+                    logger.debug("Definition: " + languageEntry.getDefinition());
+                } 
+                StaticUtils.lockDocumentListeners = false;
+            }else {
+                StaticUtils.lockDocumentListeners = true;
+                tf_fromTerm.setText("");
+                ta_fromDefinition.setText("");
                 tf_toTerm.setText("");
                 tf_toAcronymn.setText("");
                 ta_toDefinition.setText("");
+                StaticUtils.lockDocumentListeners = false;
             }
-            StaticUtils.lockDocumentListeners = false;
         }
     }
 
@@ -468,6 +482,10 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
      */
     public boolean allSaved() {
         return !btn_Save.isEnabled();
+    }
+
+    public void save() {
+        YAML.write(listOfSlugs, new File(lastdir + "/" + filename_to));
     }
 
 }
