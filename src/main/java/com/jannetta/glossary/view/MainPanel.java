@@ -241,7 +241,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        logger.debug("Event: " + e.getActionCommand());
 
         if (e.getActionCommand().equals("About")) {
             ImageIcon icon = createImageIcon("parrot.png", "Glosario Logo");
@@ -275,22 +274,32 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             StaticUtils.lockDocumentListeners = false;
 
         } else if (e.getActionCommand().equals("addslug")) {
-            Slug newSlug = new Slug(tf_fromSlug.getText());
-            listOfSlugs.put(tf_fromSlug.getText(), newSlug);
-            buttons = StaticUtils.addSlugButton(this, buttons, tf_fromSlug.getText());
-            pnl_slugButtons.fireUpdate();
-            pnl_slugButtons.getComponent(pnl_slugButtons.getComponentCount() - 1).requestFocus();
-            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum() + 1);
-            btn_Save.setEnabled(true);
-            btn_AddSlug.setVisible(false);
-            updateUI();
-            tf_fromSlug.setEditable(false);
+            if (!tf_fromSlug.getText().isBlank()) {
+                String newslug = tf_fromSlug.getText().strip();
+                if (listOfSlugs.get(newslug) == null) {
+                    Slug newSlug = new Slug(tf_fromSlug.getText().strip());
+                    listOfSlugs.put(tf_fromSlug.getText(), newSlug);
+                    buttons = StaticUtils.addSlugButton(this, buttons, tf_fromSlug.getText());
+                    pnl_slugButtons.fireUpdate();
+                    pnl_slugButtons.getComponent(pnl_slugButtons.getComponentCount() - 1).requestFocus();
+                    scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum() + 1);
+                    btn_Save.setEnabled(true);
+                    btn_AddSlug.setVisible(false);
+                    updateUI();
+                    tf_fromSlug.setEditable(false);
+                } else {
+                    JOptionPane.showMessageDialog(this, "This slug already exists.", "Duplicate Slug",
+                            JOptionPane.ERROR_MESSAGE);
+                    loadSlug(newslug);
+                }
+            }
 
+            // OPEN glossary.yml FILE
         } else if (e.getActionCommand().equals("Open")) {
             lastdir = properties.getProperty("lastdir");
             final JFileChooser fc = new JFileChooser(lastdir);
             FileFilter ymlFilter = new FileTypeFilter(".yml", "YAML file");
-            fc.addChoosableFileFilter(ymlFilter);
+            fc.setFileFilter(ymlFilter);
             // fc.setFileFilter(docF);
             int returnVal = fc.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -331,38 +340,25 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
             // SELECT SLUG
         } else if (e.getActionCommand().startsWith("btn_")) {
-
-            logger.debug("Pressed " + e.getActionCommand());
-
-            // ENABLE ABILITY TO ADD A NEW REFERENCE
-            tf_newReference.setEditable(true);
-            btn_AddReference.setEnabled(true);
-
-            // LOAD THE SLUG
-            Slug slug = listOfSlugs.get(e.getActionCommand().substring(4));
-            StaticUtils.lockDocumentListeners = true;
-            tf_fromSlug.setText(slug.getSlug());
-            StaticUtils.lockDocumentListeners = false;
-            // String[] references = Arrays.copyOf(slug.getReferences().toArray(),
-            // slug.getReferences().size(),
-            // String[].class);
-            // tf_fromSlug.setText(slug.getSlug());
-            // cb_references.removeAllItems();
-            // cb_references.setModel(new DefaultComboBoxModel<String>(references));
-            // Default language to translate from is en (English)
-            // if (slug.getLanguageEntries().get("en") != null) {
-            // if (slug.getLanguageEntries().get("en").getTerm() != null) {
-            // tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
-            // ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
-            // }
-            // } else {
-            // tf_fromTerm.setText("");
-            // ta_fromDefinition.setText("");
-            // tf_toTerm.setText("");
-            // }
-            // StaticUtils.lockDocumentListeners = false;
-            updateForm();
+            loadSlug(e.getActionCommand().substring(4));
         }
+    }
+
+    /**
+     * Load the selected slug record into the form
+     */
+    private void loadSlug(String slugkey) {
+        // ENABLE ABILITY TO ADD A NEW REFERENCE
+        tf_newReference.setEditable(true);
+        btn_AddReference.setEnabled(true);
+
+        // LOAD THE SLUG
+        Slug slug = listOfSlugs.get(slugkey);
+        StaticUtils.lockDocumentListeners = true;
+        tf_fromSlug.setText(slug.getSlug());
+        StaticUtils.lockDocumentListeners = false;
+        updateForm();
+
     }
 
     /**
@@ -411,7 +407,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                         ta_fromDefinition.setText(slug.getLanguageEntries().get(defaultLanguage).getDefinition());
                     }
                 }
-
 
                 logger.debug(defaultLanguageEntry.getLanguage());
                 tf_fromTerm.setText(defaultLanguageEntry.getTerm());
