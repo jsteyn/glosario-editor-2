@@ -32,5 +32,5 @@ jobs:
       - name: Step 5 - Create an artifact
         uses: actions/upload-artifact@v2
         with:
-          name: github-actions-artifact
+          name: GlosarioEditor2
           path: staging
