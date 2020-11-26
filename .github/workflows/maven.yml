@@ -33,8 +33,9 @@ jobs:
       - name: Step 5 - Copy shell script into staging area
         run: cp run.sh staging
 
-      - name: Step 6 - Create zip release
-        run: cd staging && zip GlosarioEditor2.zip *.jar run.sh && cd ..
+      - name: Step 6 - Create an artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: github-actions-artifact
+          path: staging
 
-      - name: Step 7 - Move zip to releases
-        run: pwd && mv staging/GlosarioEditor2.zip ../releases/new/.
