@@ -329,29 +329,38 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             btn_Save.setEnabled(true);
             StaticUtils.lockDocumentListeners = false;
 
+            // SELECT SLUG
         } else if (e.getActionCommand().startsWith("btn_")) {
+
             logger.debug("Pressed " + e.getActionCommand());
+
+            // ENABLE ABILITY TO ADD A NEW REFERENCE
             tf_newReference.setEditable(true);
             btn_AddReference.setEnabled(true);
-            // Slug button pressed
+
+            // LOAD THE SLUG
             Slug slug = listOfSlugs.get(e.getActionCommand().substring(4));
-            String[] references = Arrays.copyOf(slug.getReferences().toArray(), slug.getReferences().size(),
-                    String[].class);
             StaticUtils.lockDocumentListeners = true;
             tf_fromSlug.setText(slug.getSlug());
-            cb_references.removeAllItems();
-            cb_references.setModel(new DefaultComboBoxModel<String>(references));
-    // // Default language to translate from is en (English)
-    //         if (slug.getLanguageEntries().get("en") != null) {
-    //             if (slug.getLanguageEntries().get("en").getTerm() != null) {
-    //                 tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
-    //                 ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
-    //             }
-    //         } else {
-    //             tf_fromTerm.setText("");
-    //             ta_fromDefinition.setText("");
-    //         }
             StaticUtils.lockDocumentListeners = false;
+            // String[] references = Arrays.copyOf(slug.getReferences().toArray(),
+            // slug.getReferences().size(),
+            // String[].class);
+            // tf_fromSlug.setText(slug.getSlug());
+            // cb_references.removeAllItems();
+            // cb_references.setModel(new DefaultComboBoxModel<String>(references));
+            // Default language to translate from is en (English)
+            // if (slug.getLanguageEntries().get("en") != null) {
+            // if (slug.getLanguageEntries().get("en").getTerm() != null) {
+            // tf_fromTerm.setText(slug.getLanguageEntries().get("en").getTerm());
+            // ta_fromDefinition.setText(slug.getLanguageEntries().get("en").getDefinition());
+            // }
+            // } else {
+            // tf_fromTerm.setText("");
+            // ta_fromDefinition.setText("");
+            // tf_toTerm.setText("");
+            // }
+            // StaticUtils.lockDocumentListeners = false;
             updateForm();
         }
     }
@@ -361,6 +370,14 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
      */
     private void updateForm() {
         String language = ((String) cb_language.getSelectedItem()).substring(4);
+        // CLEAR ALL FORM FIELDS
+        StaticUtils.lockDocumentListeners = true;
+        tf_fromTerm.setText("");
+        ta_fromDefinition.setText("");
+        tf_toAcronymn.setText("");
+        tf_toTerm.setText("");
+        ta_toDefinition.setText("");
+        // NOW SET ALL FORM FIELDS
         if (!tf_fromSlug.getText().equals("")) {
             String slugname = tf_fromSlug.getText();
             Slug slug = listOfSlugs.get(slugname);
@@ -371,21 +388,34 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
             // SET FROM FIELDS
 
-            LanguageEntry defaultLanguage = null;
+            LanguageEntry defaultLanguageEntry = null;
+            String defaultLanguage = null;
+            // SLUG SHOULD NOT BE EMPTY
             if (!slug.getLanguageEntries().isEmpty()) {
+                // IF AN ENGLISH SLUG EXISTS SET THE DEFAULT LANGUAGE TO ENGLISH
                 if (slug.getLanguageEntries().get("en") != null) {
-                    defaultLanguage = slug.getLanguageEntries().get("en");
+                    defaultLanguageEntry = slug.getLanguageEntries().get("en");
+                    defaultLanguage = "en";
+                    // IF AN ENGLISH SLUG DOES NOT EXIST GET THE FIRST ONE THAT DOES EXIST
                 } else {
                     Set<String> keys = slug.getLanguageEntries().keySet();
                     String key = (String) keys.toArray()[0];
-                    defaultLanguage = slug.getLanguageEntries().get(key);
+                    defaultLanguageEntry = slug.getLanguageEntries().get(key);
+                    defaultLanguage = key;
+                }
+                logger.debug("Default languageEntry key: " + defaultLanguage);
+
+                if (defaultLanguageEntry != null) {
+                    if (slug.getLanguageEntries().get(defaultLanguage).getTerm() != null) {
+                        tf_fromTerm.setText(slug.getLanguageEntries().get(defaultLanguage).getTerm());
+                        ta_fromDefinition.setText(slug.getLanguageEntries().get(defaultLanguage).getDefinition());
+                    }
                 }
 
-                logger.debug("Default language: " + defaultLanguage.getLanguage());
-            
-                logger.debug(defaultLanguage.getLanguage());
-                tf_fromTerm.setText(defaultLanguage.getTerm());
-                ta_fromDefinition.setText(defaultLanguage.getDefinition());
+
+                logger.debug(defaultLanguageEntry.getLanguage());
+                tf_fromTerm.setText(defaultLanguageEntry.getTerm());
+                ta_fromDefinition.setText(defaultLanguageEntry.getDefinition());
 
                 // SET TO FIELDS
                 String langcode = languageCodes.get(language).getCode();
@@ -397,9 +427,9 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     tf_toAcronymn.setText(languageEntry.getAcronym());
                     ta_toDefinition.setText(languageEntry.getDefinition());
                     logger.debug("Definition: " + languageEntry.getDefinition());
-                } 
+                }
                 StaticUtils.lockDocumentListeners = false;
-            }else {
+            } else {
                 StaticUtils.lockDocumentListeners = true;
                 tf_fromTerm.setText("");
                 ta_fromDefinition.setText("");
@@ -409,6 +439,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 StaticUtils.lockDocumentListeners = false;
             }
         }
+        StaticUtils.lockDocumentListeners = false;
     }
 
     @Override
@@ -442,33 +473,30 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 if (tf_toTerm.getText().strip().equals("")) {
                     JOptionPane.showMessageDialog(this, "First enter a term before adding a description",
                             "Missing Term", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    if (!StaticUtils.lockDocumentListeners) {
-                        String language = ((String) cb_language.getSelectedItem()).substring(4);
-                        String slugname = tf_fromSlug.getText();
-                        Slug slug = listOfSlugs.get(slugname);
-                        String langcode = languageCodes.get(language).getCode();
-                        logger.debug("update: " + language + "\t" + langcode);
-                        if (slug != null) {
-                            LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
-                            if (languageEntry == null) {
-                                logger.debug("update: " + "Langcode empty");
-                                languageEntry = new LanguageEntry();
-                            }
-                            languageEntry.setLanguage(langcode);
-                            languageEntry.setTerm(tf_toTerm.getText());
-                            if (!tf_toAcronymn.getText().equals(""))
-                                languageEntry.setAcronym(tf_toAcronymn.getText());
-                            languageEntry.setDefinition(ta_toDefinition.getText());
-                            slug.getLanguageEntries().put(langcode, languageEntry);
-                            btn_Save.setEnabled(true);
-                        }
-                    }
                 }
-
             }
         }
-
+        if (!StaticUtils.lockDocumentListeners) {
+            String language = ((String) cb_language.getSelectedItem()).substring(4);
+            String slugname = tf_fromSlug.getText();
+            Slug slug = listOfSlugs.get(slugname);
+            String langcode = languageCodes.get(language).getCode();
+            logger.debug("update: " + language + "\t" + langcode);
+            if (slug != null) {
+                LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
+                if (languageEntry == null) {
+                    logger.debug("update: " + "Langcode empty");
+                    languageEntry = new LanguageEntry();
+                }
+                languageEntry.setLanguage(langcode);
+                languageEntry.setTerm(tf_toTerm.getText());
+                if (!tf_toAcronymn.getText().equals(""))
+                    languageEntry.setAcronym(tf_toAcronymn.getText());
+                languageEntry.setDefinition(ta_toDefinition.getText());
+                slug.getLanguageEntries().put(langcode, languageEntry);
+                btn_Save.setEnabled(true);
+            }
+        }
     }
 
     /**
