@@ -388,9 +388,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 ta_fromDefinition.setText(defaultLanguage.getDefinition());
 
                 // SET TO FIELDS
-                String langcode = languageCodes.get(
-                    
-                ).getCode();
+                String langcode = languageCodes.get(language).getCode();
                 LanguageEntry languageEntry = slug.getLanguageEntries().get(langcode);
                 StaticUtils.lockDocumentListeners = true;
                 if (languageEntry != null) {
