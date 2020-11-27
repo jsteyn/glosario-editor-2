@@ -1,6 +1,9 @@
 package com.jannetta.glossary.controller;
 
 import java.awt.event.ActionListener;
+import java.awt.Image;
+import java.awt.Toolkit;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,17 +11,34 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.Scanner;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
 import com.jannetta.glossary.model.LanguageCode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class StaticUtils {
     public static boolean lockDocumentListeners = false;
+    static Logger logger = LoggerFactory.getLogger(StaticUtils.class);
+
+    public static ImageIcon createImageIcon(String path, String description) {
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        try {
+            Image icon = toolkit.getImage(ClassLoader.getSystemResource("parrot.png"));
+            return new ImageIcon(icon);
+        } catch (NullPointerException e) {
+            logger.error("parrot.png not found.");
+            return null;
+        }
+    }
 
     /**
      * Load slug for slug-buttons

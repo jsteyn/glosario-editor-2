@@ -40,7 +40,6 @@ public class MainFrame extends JFrame implements ActionListener {
 	JMenuItem actions_add = new JMenuItem("New slug");
 	JMenuItem about = new JMenuItem("About");
 
-
 	public MainFrame() {
 		super("Glossary");
 
@@ -59,8 +58,9 @@ public class MainFrame extends JFrame implements ActionListener {
 				if (closer())
 					System.exit(0);
 				else {
-					int result2 = JOptionPane.showConfirmDialog(pn_main, "You have made changes, would you like to save before quitting?",
-							"Exit GlosarioEditor?", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					int result2 = JOptionPane.showConfirmDialog(pn_main,
+							"You have made changes, would you like to save before quitting?", "Exit GlosarioEditor?",
+							JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 					if (result2 == JOptionPane.YES_OPTION) {
 						logger.trace("Save file");
 
@@ -75,7 +75,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		});
 		file_open.addActionListener(pn_main.getActionListener());
 		actions_add.addActionListener(pn_main.getActionListener());
-		about.addActionListener(pn_main.getActionListener());
+		about.addActionListener(this);
 		filemenu.add(file_open);
 		actionsmenu.add(actions_add);
 		menuBar.add(filemenu);
@@ -95,6 +95,17 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		pn_main.save();
+		if (e.getActionCommand().equals("About")) {
+			showAboutDialog();
+		} else {
+			logger.debug(e.getActionCommand());
+			pn_main.save();
+		}
+	}
+
+	private void showAboutDialog() {
+
+		var aboutDialog = new AboutDialog(this);
+		aboutDialog.setVisible(true);
 	}
 }

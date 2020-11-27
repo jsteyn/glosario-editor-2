@@ -228,30 +228,22 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         return this;
     }
 
-    private ImageIcon createImageIcon(String path, String description) {
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
-        try {
-            Image icon = toolkit.getImage(ClassLoader.getSystemResource("parrot.png"));
-            return new ImageIcon(icon);
-        } catch (NullPointerException e) {
-            logger.error("parrot.png not found.");
-            return null;
-        }
-    }
-
     @Override
     public void actionPerformed(ActionEvent e) {
 
         if (e.getActionCommand().equals("About")) {
-            ImageIcon icon = createImageIcon("parrot.png", "Glosario Logo");
+            ImageIcon icon = StaticUtils.createImageIcon("parrot.png", "Glosario Logo");
             JOptionPane.showMessageDialog(this,
-                    "GlossaryEditor is an editor, written in Java for updating.\n"
-                            + "the Carpentries Glosario project YAML file.\n\n"
-                            + "Glosario is an Open Source project maintained by the Carpentries Community\n\n "
-                            + "Glosario: https://glosario.carpentries.org/\n"
-                            + "GlosarioEditor: https://github.com/jsteyn/glossario-editor-2\n\n"
-                            + "Version 1.0 (2020-11-23)\n" + "Copyright: Jannetta S Steyn, 2020",
-                    "About GlosarioEditor", JOptionPane.PLAIN_MESSAGE, icon);
+            "GlossaryEditor is an editor, written in Java for updating.\n"
+            + "the Carpentries Glosario project YAML file.\n\n"
+            + "GlosarioEditor: "
+            + "<a href=\"https://github.com/jsteyn/glossario-editor-2>"
+            + "https://github.com/jsteyn/glossario-editor-2</a>\n\n"
+            + "Glosario is an Open Source project maintained by the Carpentries Community\n"
+            + "Glosario: https://glosario.carpentries.org/\n\n"
+            + "Version 1.0 (2020-11-27)\n" + "Copyright: Jannetta S Steyn, 2020",
+            "About GlosarioEditor", JOptionPane.PLAIN_MESSAGE, icon);
+
         }
         if (e.getActionCommand().equals("comboBoxChanged")) {
             logger.debug("Source: " + e.getSource().toString());
@@ -346,9 +338,8 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     cb_references.showPopup();
                     slug.getReferences().add(newReference);
                 } else {
-                    JOptionPane.showMessageDialog(this, "This reference already exists.", 
-                    "Duplicate Reference",
-                    JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "This reference already exists.", "Duplicate Reference",
+                            JOptionPane.ERROR_MESSAGE);
                     tf_newReference.setText("");
                 }
                 btn_Save.setEnabled(true);
@@ -528,5 +519,6 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
     public void save() {
         YAML.write(listOfSlugs, new File(lastdir + "/" + filename_to));
     }
+
 
 }
