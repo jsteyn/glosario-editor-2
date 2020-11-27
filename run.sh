@@ -1,3 +1,3 @@
 #!/bin/sh
 
-java -cp target/GlosarioEditor2.jar GlosarioEditor2 
+java -cp GlosarioEditor2.jar GlosarioEditor2 
