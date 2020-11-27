@@ -274,7 +274,8 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
             StaticUtils.lockDocumentListeners = false;
 
         } else if (e.getActionCommand().equals("addslug")) {
-            if (!tf_fromSlug.getText().isBlank()) {
+            StaticUtils.lockDocumentListeners = true;
+            if (!tf_fromSlug.getText().strip().isBlank()) {
                 String newslug = tf_fromSlug.getText().strip();
                 if (listOfSlugs.get(newslug) == null) {
                     Slug newSlug = new Slug(tf_fromSlug.getText().strip());
@@ -287,12 +288,18 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     btn_AddSlug.setVisible(false);
                     updateUI();
                     tf_fromSlug.setEditable(false);
+                    tf_fromSlug.setText("");
                 } else {
                     JOptionPane.showMessageDialog(this, "This slug already exists.", "Duplicate Slug",
                             JOptionPane.ERROR_MESSAGE);
                     loadSlug(newslug);
+                    btn_AddSlug.setVisible(false);
+                    tf_fromSlug.setText("");
+                    tf_fromSlug.setEditable(false);
                 }
-            }
+            } else
+                tf_fromSlug.setText("");
+            StaticUtils.lockDocumentListeners = false;
 
             // OPEN glossary.yml FILE
         } else if (e.getActionCommand().equals("Open")) {
@@ -329,13 +336,25 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
         } else if (e.getActionCommand().equals("Add Reference")) {
             logger.debug("New reference");
             StaticUtils.lockDocumentListeners = true;
-            String newReference = tf_newReference.getText();
-            cb_references.addItem(newReference);
-            tf_newReference.setText("");
-            cb_references.showPopup();
-            Slug slug = listOfSlugs.get(tf_fromSlug.getText());
-            slug.getReferences().add(newReference);
-            btn_Save.setEnabled(true);
+            if (!tf_newReference.getText().isBlank()) {
+                String newReference = tf_newReference.getText().strip();
+                Slug slug = listOfSlugs.get(tf_fromSlug.getText());
+                if (!slug.getReferences().contains(newReference)) {
+                    slug.getReferences().contains(tf_newReference.getText().strip());
+                    cb_references.addItem(newReference);
+                    tf_newReference.setText("");
+                    cb_references.showPopup();
+                    slug.getReferences().add(newReference);
+                } else {
+                    JOptionPane.showMessageDialog(this, "This reference already exists.", 
+                    "Duplicate Reference",
+                    JOptionPane.ERROR_MESSAGE);
+                    tf_newReference.setText("");
+                }
+                btn_Save.setEnabled(true);
+            } else
+                tf_newReference.setText("");
+
             StaticUtils.lockDocumentListeners = false;
 
             // SELECT SLUG
