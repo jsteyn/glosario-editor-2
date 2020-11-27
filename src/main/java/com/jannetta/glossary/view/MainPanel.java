@@ -59,7 +59,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     private JPanel pnl_fromLanguage = new JPanel();
 
-    private JLabel lbl_fromLanguage = new JLabel("English Entry:");
+    private JLabel lbl_fromLanguage = new JLabel("Language: en");
     private JLabel lbl_fromSlug = new JLabel("Slug");
     private JTextField tf_fromSlug = new JTextField(20);
     private JLabel lbl_fromTerm = new JLabel("Term");
@@ -400,6 +400,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                     defaultLanguage = key;
                 }
                 logger.debug("Default languageEntry key: " + defaultLanguage);
+                lbl_fromLanguage.setText("Language: " + defaultLanguage);
 
                 if (defaultLanguageEntry != null) {
                     if (slug.getLanguageEntries().get(defaultLanguage).getTerm() != null) {
