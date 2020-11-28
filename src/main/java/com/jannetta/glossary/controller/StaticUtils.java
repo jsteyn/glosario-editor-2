@@ -32,7 +32,7 @@ public class StaticUtils {
     public static ImageIcon createImageIcon(String path, String description) {
         Toolkit toolkit = Toolkit.getDefaultToolkit();
         try {
-            Image icon = toolkit.getImage(ClassLoader.getSystemResource("parrot.png"));
+            Image icon = toolkit.getImage(ClassLoader.getSystemResource(path));
             return new ImageIcon(icon);
         } catch (NullPointerException e) {
             logger.error("parrot.png not found.");

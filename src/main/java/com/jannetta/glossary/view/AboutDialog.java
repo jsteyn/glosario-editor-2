@@ -32,7 +32,7 @@ class AboutDialog extends JDialog {
 
     private void initUI() {
 
-        ImageIcon icon = StaticUtils.createImageIcon("parrot.png", "Glosario Logo");
+        ImageIcon icon = StaticUtils.createImageIcon("parrotpaint2.png", "Glosario Logo");
         JLabel imgLabel = new JLabel(icon);
 
         SimpleAttributeSet sa = new SimpleAttributeSet();

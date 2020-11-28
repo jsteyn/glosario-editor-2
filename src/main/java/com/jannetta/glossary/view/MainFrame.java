@@ -14,6 +14,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 
+import com.jannetta.glossary.controller.StaticUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	JMenuItem file_open = new JMenuItem("Open");
 	JMenuItem actions_add = new JMenuItem("New slug");
 	JMenuItem about = new JMenuItem("About");
+	String iconname = "parrotpaint.png";
 
 	public MainFrame() {
 		super("Glossary");
@@ -47,11 +50,12 @@ public class MainFrame extends JFrame implements ActionListener {
 
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		try {
-			Image icon = toolkit.getImage(ClassLoader.getSystemResource("parrot.png"));
+			//Image icon = toolkit.getImage(ClassLoader.getSystemResource(iconname));
+			Image icon = StaticUtils.createImageIcon(iconname, "Logo").getImage();
 
 			setIconImage(icon);
 		} catch (NullPointerException e) {
-			logger.error("parrot.png not found.");
+			logger.error(iconname + " not found.");
 		}
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
