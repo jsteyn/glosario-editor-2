@@ -4,7 +4,7 @@
 name: Java CI with Maven
 
 on:
-  merge:
+  push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
