@@ -87,3 +87,5 @@ You can now edit the glossary in the following ways:
 1. New slugs should be inserted in alphabetical order. At the moment they are just appended to the end of the file.
 1. Functionality to delete a slug.
 1. Functionality to delete a reference.
+
+---
