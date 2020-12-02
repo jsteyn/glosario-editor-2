@@ -3,6 +3,7 @@ package com.jannetta.glossary.view;
 import static javax.swing.GroupLayout.Alignment.CENTER;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.Frame;
 
@@ -42,18 +43,19 @@ class AboutDialog extends JDialog {
         textLabel.setContentType("text/html");
         textLabel.setEditable(false);
         textLabel.setText("<html><head><style>div {text-align: center;}</style></head><body>"
-        + "<div><b>GlosarioEditor2</b><div>"
-        + "<div>Version 1.0</div>"
-        + "<div>GlossaryEditor is an editor, written in Java for updating<br/> "
-        + "the Carpentries Glosario project YAML file<br/>"
-        + "<a href=\"https://github.com/jsteyn/glossario-editor-2\">"
-        + "https://github.com/jsteyn/glossario-editor-2</a></div>"
-        + "<hr/>"
-        + "<div><b>Glossario</b></div>"
-        + "<div>Glosario is an Open Source project maintained by the Carpentries Community<br/>"
-        + "<a href=\"https://glosario.carpentries.org/\">https://glosario.carpentries.org/</a></div>"
-        + "</body></html>");
-    textLabel.setFont(new Font("Serif", Font.BOLD, 13));
+                + "<div><b>GlosarioEditor2</b><div>" + "<div>Version 1.0</div>"
+                + "<div>GlossaryEditor is an editor, written in Java for updating<br/> "
+                + "the Carpentries Glosario project YAML file<br/>"
+                + "<a href=\"https://github.com/jsteyn/glossario-editor-2\">"
+                + "https://github.com/jsteyn/glossario-editor-2</a></div>"
+                + "<br/>"
+                + "<div><b>Authors:</b> Jannetta S. Steyn && Stuart M. Lewis</div"
+                + "<hr/>" 
+                + "<div><b>Glossario</b></div>"
+                + "<div>Glosario is an Open Source project maintained by the Carpentries Community<br/>"
+                + "<a href=\"https://glosario.carpentries.org/\">https://glosario.carpentries.org/</a></div>"
+                + "</body></html>");
+        textLabel.setFont(new Font("Serif", Font.BOLD, 13));
 
         JButton okBtn = new JButton("Close");
         okBtn.addActionListener(event -> dispose());
@@ -70,9 +72,9 @@ class AboutDialog extends JDialog {
 
     private void createLayout(JComponent... arg) {
 
-        var pane = getContentPane();
+        Container pane = getContentPane();
         pane.setBackground(new Color(58, 179, 76, 57));
-        var gl = new GroupLayout(pane);
+        GroupLayout gl = new GroupLayout(pane);
         pane.setLayout(gl);
 
         gl.setAutoCreateContainerGaps(true);
