@@ -1,11 +1,12 @@
 package com.jannetta.glossary.view;
 
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.util.Properties;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -14,7 +15,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
 
-import com.jannetta.glossary.controller.StaticUtils;
+import com.jannetta.glossary.controller.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,7 @@ public class MainFrame extends JFrame implements ActionListener {
 	 */
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private MainPanel pn_main = new MainPanel();
+	private Properties properties = new Properties();
 	JMenuBar menuBar = new JMenuBar();
 	JMenu filemenu = new JMenu("File");
 	JMenu actionsmenu = new JMenu("Actions");
@@ -42,20 +44,35 @@ public class MainFrame extends JFrame implements ActionListener {
 	JMenuItem actions_add = new JMenuItem("New slug");
 	JMenuItem about = new JMenuItem("About");
 	String iconname = "parrotpaint.png";
+	String lastdir = "";
+	String filename_from = "glossary.yml";
+	String filename_to = filename_from;
 
 	public MainFrame() {
 		super("Glossary");
 
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-		Toolkit toolkit = Toolkit.getDefaultToolkit();
 		try {
-			//Image icon = toolkit.getImage(ClassLoader.getSystemResource(iconname));
+			// Image icon = toolkit.getImage(ClassLoader.getSystemResource(iconname));
 			Image icon = StaticUtils.createImageIcon(iconname, "Logo").getImage();
 
 			setIconImage(icon);
 		} catch (NullPointerException e) {
 			logger.error(iconname + " not found.");
+		}
+		/**
+		 * Load defaults from system.properties
+		 */
+		properties = StaticUtils.loadProperties();
+		if (!(properties.getProperty("lastdir") == null))
+			lastdir = properties.getProperty("lastdir");
+		else
+			properties.setProperty("lastdir", lastdir);
+		String fn = properties.getProperty("filename_from");
+		if (!(fn == null)) {
+			filename_from = fn;
+			filename_to = filename_from;
 		}
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -67,7 +84,7 @@ public class MainFrame extends JFrame implements ActionListener {
 							JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 					if (result2 == JOptionPane.YES_OPTION) {
 						logger.trace("Save file");
-
+						YAML.write(pn_main.getListOfSlugs(), new File(lastdir + "/" + filename_to));
 					} else if (result2 == JOptionPane.NO_OPTION) {
 						logger.trace("Quit without saving");
 					} else {
@@ -109,7 +126,7 @@ public class MainFrame extends JFrame implements ActionListener {
 
 	private void showAboutDialog() {
 
-		var aboutDialog = new AboutDialog(this);
+		AboutDialog aboutDialog = new AboutDialog(this);
 		aboutDialog.setVisible(true);
 	}
 }

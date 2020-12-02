@@ -1,7 +1,5 @@
 package com.jannetta.glossary.view;
 
-import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.Color;
 import java.awt.event.*;
 import java.io.File;
@@ -53,7 +51,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     private String lastdir = ".";
     private String filename_from = "glossary.yml";
-    private String filename_to = "glossary_bu.yml";
+    private String filename_to = filename_from;
     private JButtonPanel pnl_slugButtons;
     private ArrayList<JButton> buttons;
 
@@ -305,7 +303,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
                 File file = fc.getSelectedFile();
                 lastdir = file.getParent();
                 filename_from = file.getName();
-                filename_to = filename_from.substring(0, filename_from.length() - 4) + "_bu.yml";
+                filename_to = filename_from.substring(0, filename_from.length() - 4);
                 logger.debug(lastdir + "/" + filename_from + "\t" + lastdir + "/" + filename_to);
                 // Read slugs
                 listOfSlugs = YAML.parseYAML(new File(lastdir + "/" + filename_from));
@@ -350,6 +348,7 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
             // SELECT SLUG
         } else if (e.getActionCommand().startsWith("btn_")) {
+            btn_AddSlug.setVisible(false);
             loadSlug(e.getActionCommand().substring(4));
         }
     }
@@ -518,6 +517,14 @@ public class MainPanel extends JPanel implements ActionListener, DocumentListene
 
     public void save() {
         YAML.write(listOfSlugs, new File(lastdir + "/" + filename_to));
+    }
+
+    public LinkedHashMap<String, Slug> getListOfSlugs() {
+        return listOfSlugs;
+    }
+
+    public void setListOfSlugs(LinkedHashMap<String, Slug> listOfSlugs) {
+        this.listOfSlugs = listOfSlugs;
     }
 
 
