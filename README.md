@@ -1,7 +1,8 @@
 # Glosario-Editor-2 #
 
-Glosario-Editor-2 is an editor for updating the Carpentries glossary which is maintained in the Glosario project.
-
+|| |
+|-|-|
+|Glosario-Editor-2 is an editor for updating the Carpentries glossary which is maintained in the Glosario project.|![Painting Parrot](screenshots/parrotpaint2_wb.png)|
 ## Why an editor?
 
 I kept making indentation errors and introducing errors in parts of the document that I didn't even work on. So I decided to write an editor that will:
